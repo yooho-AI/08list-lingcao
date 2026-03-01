@@ -115,11 +115,12 @@ interface GameActions {
 
 type GameStore = GameState & GameActions
 
-// ── Dual-track parseStatChanges ──────────────────────
-// Supports 3 formats:
-//   Track 1: 【角色名 数值名±N】 (primary, per script.md)
-//   Track 2: 【角色名】数值名±N  (legacy, stat outside brackets)
-//   Track 3: 【数值名±N】        (no character, only for unique labels)
+// ── parseStatChanges ─────────────────────────────────
+// Handles any bracket format the AI may produce:
+//   【叶青霜 好感 +5 信任 +8】  (multiple stats, spaces around ±)
+//   【叶青霜 好感+5】            (no spaces)
+//   【叶青霜】好感+5             (legacy, stat outside bracket)
+//   【好感+5】                   (no char name, unique labels only)
 
 function parseStatChanges(
   content: string,
@@ -132,8 +133,8 @@ function parseStatChanges(
   for (const [id, char] of Object.entries(characters)) {
     nameToId[char.name] = id
   }
+  const names = Object.keys(nameToId).sort((a, b) => b.length - a.length)
 
-  // Per-character label→key map (avoids collision between chars sharing same label)
   const charLabelMap: Record<string, Record<string, string>> = {}
   for (const [id, char] of Object.entries(characters)) {
     const map: Record<string, string> = {}
@@ -151,38 +152,53 @@ function parseStatChanges(
   }
   const findStat = (charId: string, label: string) => charLabelMap[charId]?.[label]
 
-  let m
-  // Track 1: 【角色名 数值名±N】
-  const r1 = /[【\[]\s*(.+?)\s+([\u4e00-\u9fff\w]+?)([+-])(\d+)\s*[】\]]/g
-  while ((m = r1.exec(content)) !== null) {
-    const charId = nameToId[m[1].trim()]
-    if (charId) {
-      const stat = findStat(charId, m[2])
-      if (stat) add(charId, stat, parseInt(m[4]) * (m[3] === '+' ? 1 : -1))
+  // Pattern: Chinese label + optional space + ± + optional space + number
+  const statPat = /([\u4e00-\u9fff]+)\s*([+-])\s*(\d+)/g
+
+  const parsePart = (text: string, charId: string | null) => {
+    statPat.lastIndex = 0
+    let sm
+    while ((sm = statPat.exec(text)) !== null) {
+      const label = sm[1]
+      const delta = parseInt(sm[3]) * (sm[2] === '+' ? 1 : -1)
+      if (charId) {
+        const stat = findStat(charId, label)
+        if (stat) add(charId, stat, delta)
+      } else {
+        const hits: Array<{ charId: string; stat: string }> = []
+        for (const [id, map] of Object.entries(charLabelMap)) {
+          if (map[label]) hits.push({ charId: id, stat: map[label] })
+        }
+        if (hits.length === 1) add(hits[0].charId, hits[0].stat, delta)
+      }
     }
   }
 
-  // Track 2: 【角色名】数值名±N
-  const r2 = /[【\[]([^\]】]+)[】\]]\s*([\u4e00-\u9fff\w]+?)([+-])(\d+)/g
-  while ((m = r2.exec(content)) !== null) {
-    const charId = nameToId[m[1].trim()]
-    if (charId) {
-      const stat = findStat(charId, m[2])
-      if (stat) add(charId, stat, parseInt(m[4]) * (m[3] === '+' ? 1 : -1))
+  // Pass 1: Extract all 【...】 bracket groups
+  const bracketPat = /[【\[]([^\]】]+)[】\]]/g
+  let bm
+  while ((bm = bracketPat.exec(content)) !== null) {
+    const inner = bm[1].trim()
+    let charId: string | null = null
+    let rest = inner
+    for (const name of names) {
+      if (inner.startsWith(name)) {
+        charId = nameToId[name]
+        rest = inner.slice(name.length).trim()
+        break
+      }
     }
+    parsePart(rest, charId)
   }
 
-  // Track 3: 【数值名±N】 (only for labels unique to one character)
-  const r3 = /[【\[]\s*([\u4e00-\u9fff\w]+?)([+-])(\d+)\s*[】\]]/g
-  while ((m = r3.exec(content)) !== null) {
-    const label = m[1]
-    const hits: Array<{ charId: string; stat: string }> = []
-    for (const [id, map] of Object.entries(charLabelMap)) {
-      const key = map[label]
-      if (key) hits.push({ charId: id, stat: key })
-    }
-    if (hits.length === 1) {
-      add(hits[0].charId, hits[0].stat, parseInt(m[3]) * (m[2] === '+' ? 1 : -1))
+  // Pass 2: Legacy 【角色名】数值名 ±N (stat outside brackets)
+  const legacyPat = /[【\[]([^\]】]+)[】\]]\s*([\u4e00-\u9fff\w]+?)\s*([+-])\s*(\d+)/g
+  let lm
+  while ((lm = legacyPat.exec(content)) !== null) {
+    const charId = nameToId[lm[1].trim()]
+    if (charId) {
+      const stat = findStat(charId, lm[2])
+      if (stat) add(charId, stat, parseInt(lm[4]) * (lm[3] === '+' ? 1 : -1))
     }
   }
 
