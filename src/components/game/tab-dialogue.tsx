@@ -5,7 +5,7 @@
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   PaperPlaneRight, Backpack, GameController, CaretUp, CaretDown,
@@ -245,15 +245,35 @@ export default function TabDialogue() {
   const sendMessage = useGameStore((s) => s.sendMessage)
   const isTyping = useGameStore((s) => s.isTyping)
 
+  const streamingContent = useGameStore((s) => s.streamingContent)
+
   const [input, setInput] = useState('')
   const [showInventory, setShowInventory] = useState(false)
   const chatRef = useRef<HTMLDivElement>(null)
+  const userScrolledUp = useRef(false)
 
-  // Auto-scroll
+  // Detect user scroll: if user scrolls up, stop auto-scroll
+  const handleScroll = useCallback(() => {
+    const el = chatRef.current
+    if (!el) return
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    userScrolledUp.current = distanceFromBottom > 80
+  }, [])
+
+  // Smart auto-scroll: only scroll to bottom when user is near bottom
   useEffect(() => {
     const el = chatRef.current
+    if (el && !userScrolledUp.current) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [messages, isTyping, streamingContent])
+
+  // Reset scroll lock when new message batch arrives (user sent or AI finished)
+  useEffect(() => {
+    userScrolledUp.current = false
+    const el = chatRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [messages, isTyping])
+  }, [messages.length])
 
   const handleSend = () => {
     const text = input.trim()
@@ -284,6 +304,7 @@ export default function TabDialogue() {
       <div
         ref={chatRef}
         className={`${P}-scrollbar`}
+        onScroll={handleScroll}
         style={{ flex: 1, overflow: 'auto', padding: '12px 12px 0', display: 'flex', flexDirection: 'column' }}
       >
         <LetterCard />
