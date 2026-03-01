@@ -116,49 +116,76 @@ interface GameActions {
 type GameStore = GameState & GameActions
 
 // ── Dual-track parseStatChanges ──────────────────────
+// Supports 3 formats:
+//   Track 1: 【角色名 数值名±N】 (primary, per script.md)
+//   Track 2: 【角色名】数值名±N  (legacy, stat outside brackets)
+//   Track 3: 【数值名±N】        (no character, only for unique labels)
 
 function parseStatChanges(
   content: string,
   characters: Record<string, Character>
 ): Array<{ charId: string; stat: string; delta: number }> {
   const changes: Array<{ charId: string; stat: string; delta: number }> = []
+  const seen = new Set<string>()
 
   const nameToId: Record<string, string> = {}
   for (const [id, char] of Object.entries(characters)) {
     nameToId[char.name] = id
   }
 
-  const labelToKey: Record<string, { charId: string; key: string }> = {}
+  // Per-character label→key map (avoids collision between chars sharing same label)
+  const charLabelMap: Record<string, Record<string, string>> = {}
   for (const [id, char] of Object.entries(characters)) {
+    const map: Record<string, string> = {}
     for (const meta of char.statMetas) {
-      labelToKey[meta.label] = { charId: id, key: meta.key }
-      labelToKey[`${meta.label}度`] = { charId: id, key: meta.key }
-      labelToKey[`${meta.label}值`] = { charId: id, key: meta.key }
+      map[meta.label] = meta.key
+      map[`${meta.label}度`] = meta.key
+      map[`${meta.label}值`] = meta.key
+    }
+    charLabelMap[id] = map
+  }
+
+  const add = (charId: string, stat: string, delta: number) => {
+    const key = `${charId}:${stat}:${delta}`
+    if (!seen.has(key)) { seen.add(key); changes.push({ charId, stat, delta }) }
+  }
+  const findStat = (charId: string, label: string) => charLabelMap[charId]?.[label]
+
+  let m
+  // Track 1: 【角色名 数值名±N】
+  const r1 = /[【\[]\s*(.+?)\s+([\u4e00-\u9fff\w]+?)([+-])(\d+)\s*[】\]]/g
+  while ((m = r1.exec(content)) !== null) {
+    const charId = nameToId[m[1].trim()]
+    if (charId) {
+      const stat = findStat(charId, m[2])
+      if (stat) add(charId, stat, parseInt(m[4]) * (m[3] === '+' ? 1 : -1))
     }
   }
 
-  const regex = /[【\[]([^\]】]+)[】\]]\s*(\S+?)([+-])(\d+)/g
-  let match
-  while ((match = regex.exec(content)) !== null) {
-    const charId = nameToId[match[1]]
-    const label = match[2]
+  // Track 2: 【角色名】数值名±N
+  const r2 = /[【\[]([^\]】]+)[】\]]\s*([\u4e00-\u9fff\w]+?)([+-])(\d+)/g
+  while ((m = r2.exec(content)) !== null) {
+    const charId = nameToId[m[1].trim()]
     if (charId) {
-      const char = characters[charId]
-      const meta = char?.statMetas.find(
-        (m) => label === m.label || label === `${m.label}度` || label === `${m.label}值`
-      )
-      if (meta) {
-        const delta = parseInt(match[4]) * (match[3] === '+' ? 1 : -1)
-        changes.push({ charId, stat: meta.key, delta })
-      }
-    } else {
-      const info = labelToKey[label]
-      if (info) {
-        const delta = parseInt(match[4]) * (match[3] === '+' ? 1 : -1)
-        changes.push({ charId: info.charId, stat: info.key, delta })
-      }
+      const stat = findStat(charId, m[2])
+      if (stat) add(charId, stat, parseInt(m[4]) * (m[3] === '+' ? 1 : -1))
     }
   }
+
+  // Track 3: 【数值名±N】 (only for labels unique to one character)
+  const r3 = /[【\[]\s*([\u4e00-\u9fff\w]+?)([+-])(\d+)\s*[】\]]/g
+  while ((m = r3.exec(content)) !== null) {
+    const label = m[1]
+    const hits: Array<{ charId: string; stat: string }> = []
+    for (const [id, map] of Object.entries(charLabelMap)) {
+      const key = map[label]
+      if (key) hits.push({ charId: id, stat: key })
+    }
+    if (hits.length === 1) {
+      add(hits[0].charId, hits[0].stat, parseInt(m[3]) * (m[2] === '+' ? 1 : -1))
+    }
+  }
+
   return changes
 }
 
