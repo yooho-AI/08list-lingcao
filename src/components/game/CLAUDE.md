@@ -1,16 +1,23 @@
 # components/game/
 > L2 | 父级: /CLAUDE.md
 
-灵草修仙录游戏 UI 组件层 — PC 三栏布局 + 移动端自适应 + 高光弹窗。
+灵草修仙录游戏 UI 组件层 — 移动优先 Tab+手势+富消息架构。
 
 ## 成员清单
 
 ```
-character-panel.tsx  : 左侧面板，场景卡片 + 场景选择器(5场景锁定/解锁) + 角色立绘 + 简介 + 异构数值条(statMetas驱动) + 朔月倒计时 + 3NPC单列角色选择
-dialogue-panel.tsx   : 中间面板，场景背景 + 遮罩 + Chat Fiction 段落 + 流式显示 + 输入框
-side-panel.tsx       : 右侧面板，图标导航栏 52px(🎒背包+💕关系) + 背包滑入面板 260px + 关系总览面板 260px(异构数值: statMetas驱动)
-mobile-layout.tsx    : 移动端全屏布局，暗色仙侠风 + 场景锁定/解锁快切 + 朔月倒计时 + Sheet抽屉(3NPC异构数值/背包/菜单) + 4种结局面板
-highlight-modal.tsx  : 高光时刻弹窗，AI分析 + 生图 + 生视频，主色#10b981
+app-shell.tsx        : 桌面居中壳(430px) + Header(📓+🎵+☰+📜) + 三向手势(左右滑抽屉) + AnimatePresence Tab路由 + TabBar(5键) + RecordSheet + MenuOverlay + Toast
+tab-dialogue.tsx     : 对话Tab：富消息路由(SceneCard/PeriodCard/NPC头像气泡/Player/System) + LetterCard欢迎信 + StreamingBubble + CollapsibleChoices(A/B/C/D) + InventorySheet背包 + InputArea
+tab-scene.tsx        : 场景Tab：场景大图(Ken Burns动画) + 描述 + 5地点列表(锁定/解锁/当前)
+tab-character.tsx    : 人物Tab：立绘(9:16) + 异构数值条(statMetas遍历零if/else) + NPC关系列表 + SVG环形关系图(中心"我"+3NPC立绘) + 3人角色网格 + CharacterDossier全屏档案(呼吸动画立绘+异构数值)
+dashboard-drawer.tsx : 修仙手帐(左抽屉)：扉页(天数/时辰/章节/行动力) + 朔月倒计时(脉冲警告) + 角色横向轮播(触摸滑动) + 场景缩略图 + 修行目标 + 道具格 + 迷你播放器。Reorder拖拽排序(localStorage lc-dash-order持久化)
 ```
+
+## 数据流
+
+- 所有组件从 `@/lib/store` 读状态 + 调用 actions
+- 富消息通过 `Message.type` 字段路由渲染：`scene-transition` → SceneCard，`period-change` → PeriodCard
+- NPC 消息通过 `Message.character` 字段匹配角色立绘和主题色
+- 异构数值通过 `Character.statMetas` 遍历渲染，每角色维度不同
 
 [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md

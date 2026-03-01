@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 无外部依赖
  * [OUTPUT]: 对外提供游戏类型定义 + 数据常量 + 工具函数
- * [POS]: lib 的游戏数据层，3NPC/5场景/3道具/4章节/强制事件/5结局/6时段
+ * [POS]: lib 的 UI 薄层，3NPC/5场景/3道具/4章节/强制事件/5结局/6时段
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
@@ -15,6 +15,7 @@ export interface StatMeta {
   label: string
   color: string
   icon: string
+  category: 'relation' | 'status' | 'skill'
   autoIncrement?: number
   decayRate?: number
 }
@@ -25,8 +26,7 @@ export type CharacterStats = Record<string, number>
 export interface Character {
   id: string
   name: string
-  avatar: string
-  fullImage: string
+  portrait: string
   gender: 'female' | 'male'
   age: number
   title: string
@@ -97,12 +97,23 @@ export interface TimePeriod {
   hours: string
 }
 
+export interface StoryRecord {
+  id: string
+  day: number
+  period: string
+  title: string
+  content: string
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
   content: string
   character?: string
   timestamp: number
+  type?: 'scene-transition' | 'period-change'
+  sceneId?: string
+  periodInfo?: { day: number; period: string; chapter: string }
 }
 
 // ============================================================
@@ -133,8 +144,7 @@ export const PERIODS: TimePeriod[] = [
 const DANCHENZI: Character = {
   id: 'danchenzi',
   name: '丹辰子',
-  avatar: '丹',
-  fullImage: '/characters/danchenzi.jpg',
+  portrait: '/characters/danchenzi.jpg',
   gender: 'male',
   age: 800,
   title: '药王谷谷主',
@@ -147,7 +157,7 @@ const DANCHENZI: Character = {
   themeColor: '#b45309',
   joinDay: 1,
   statMetas: [
-    { key: 'coveting', label: '觊觎', color: '#b45309', icon: '👁', autoIncrement: 5 },
+    { key: 'coveting', label: '觊觎', color: '#b45309', icon: '👁', category: 'status', autoIncrement: 5 },
   ],
   initialStats: { coveting: 50 },
 }
@@ -158,8 +168,7 @@ function buildYeqingshuang(playerGender: 'male' | 'female'): Character {
   return {
     id: 'yeqingshuang',
     name: '叶青霜',
-    avatar: '叶',
-    fullImage: isFemale ? '/characters/yeqingshuang-f.jpg' : '/characters/yeqingshuang-m.jpg',
+    portrait: isFemale ? '/characters/yeqingshuang-f.jpg' : '/characters/yeqingshuang-m.jpg',
     gender: isFemale ? 'female' : 'male',
     age: 300,
     title: '散修剑修',
@@ -174,8 +183,8 @@ function buildYeqingshuang(playerGender: 'male' | 'female'): Character {
     themeColor: '#0ea5e9',
     joinDay: 1,
     statMetas: [
-      { key: 'affection', label: '好感', color: '#ef4444', icon: '❤' },
-      { key: 'trust', label: '信任', color: '#22c55e', icon: '🤝' },
+      { key: 'affection', label: '好感', color: '#ef4444', icon: '❤', category: 'relation' },
+      { key: 'trust', label: '信任', color: '#22c55e', icon: '🤝', category: 'relation' },
     ],
     initialStats: { affection: 0, trust: 0 },
   }
@@ -185,8 +194,7 @@ function buildYeqingshuang(playerGender: 'male' | 'female'): Character {
 const CHILI: Character = {
   id: 'chili',
   name: '赤璃',
-  avatar: '赤',
-  fullImage: '/characters/chili.jpg',
+  portrait: '/characters/chili.jpg',
   gender: 'male',
   age: 200,
   title: '妖族少主',
@@ -199,8 +207,8 @@ const CHILI: Character = {
   themeColor: '#ef4444',
   joinDay: 1,
   statMetas: [
-    { key: 'affection', label: '好感', color: '#ef4444', icon: '❤' },
-    { key: 'assimilation', label: '同化', color: '#7c3aed', icon: '🔮' },
+    { key: 'affection', label: '好感', color: '#ef4444', icon: '❤', category: 'relation' },
+    { key: 'assimilation', label: '同化', color: '#7c3aed', icon: '🔮', category: 'status' },
   ],
   initialStats: { affection: 0, assimilation: 0 },
 }
@@ -437,6 +445,17 @@ export const ENDINGS: Ending[] = [
     condition: '所有角色好感度<60 且 到达化形池但选择离开',
   },
 ]
+
+// ============================================================
+// 结局类型映射 — 数据驱动结局渲染
+// ============================================================
+
+export const ENDING_TYPE_MAP: Record<string, { label: string; color: string; icon: string; gradient: string }> = {
+  TE: { label: 'True Ending', color: '#10b981', icon: '🌿', gradient: 'linear-gradient(135deg, #064e3b 0%, #0f172a 100%)' },
+  HE: { label: 'Happy Ending', color: '#ef4444', icon: '🌺', gradient: 'linear-gradient(135deg, #7f1d1d 0%, #0f172a 100%)' },
+  BE: { label: 'Bad Ending', color: '#6b7280', icon: '⚰️', gradient: 'linear-gradient(135deg, #1f2937 0%, #0f172a 100%)' },
+  NE: { label: 'Normal Ending', color: '#f59e0b', icon: '🍃', gradient: 'linear-gradient(135deg, #78350f 0%, #0f172a 100%)' },
+}
 
 // ============================================================
 // 开场信笺

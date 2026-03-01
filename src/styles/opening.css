@@ -1,0 +1,201 @@
+/**
+ * [INPUT]: 依赖 globals.css CSS 变量
+ * [OUTPUT]: 开场页全部样式——仙侠暗色 StartScreen（性别选择+灵名输入+NPC 预览+粒子）
+ * [POS]: styles 的开场专用样式，暗色仙侠水墨风（不抄 huashao 三幕开场）
+ * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
+ */
+
+/* ================================================================
+   StartScreen 全屏容器
+   ================================================================ */
+
+.lc-start {
+  position: fixed; inset: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(170deg, #0f172a 0%, #0a1628 40%, #0f172a 100%);
+}
+
+/* 背景灵气粒子层 */
+.lc-start-particles {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+}
+.lc-start-spark {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+  animation: lcSparkFloat linear infinite;
+}
+@keyframes lcSparkFloat {
+  0%   { opacity: 0; transform: translateY(0) scale(0.3); }
+  20%  { opacity: 0.6; }
+  80%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
+}
+
+/* 雾气背景 */
+.lc-start::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ================================================================
+   主内容卡片
+   ================================================================ */
+
+.lc-start-card {
+  position: relative; z-index: 1;
+  width: 360px; max-width: calc(100vw - 48px);
+  text-align: center; padding: 32px 24px;
+}
+
+/* 标题区 */
+.lc-start-icon {
+  font-size: 56px; margin-bottom: 12px;
+  filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.3));
+}
+
+.lc-start-title {
+  font-size: 26px; font-weight: 700; letter-spacing: 4px;
+  color: #e2e8f0;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  margin-bottom: 6px;
+}
+
+.lc-start-subtitle {
+  font-size: 12px; letter-spacing: 6px;
+  color: rgba(16, 185, 129, 0.7);
+  margin-bottom: 6px;
+}
+
+.lc-start-desc {
+  font-size: 12px; line-height: 1.8; letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 28px;
+}
+
+/* ================================================================
+   性别选择
+   ================================================================ */
+
+.lc-start-gender {
+  display: flex; justify-content: center; gap: 12px; margin-bottom: 16px;
+}
+
+.lc-start-gender-btn {
+  padding: 8px 28px; border-radius: 24px;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all 0.25s; border: 1px solid rgba(16, 185, 129, 0.25);
+  background: transparent; color: #94a3b8;
+}
+
+.lc-start-gender-btn.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: transparent; color: #fff;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.3);
+}
+
+.lc-start-gender-btn:active { transform: scale(0.96); }
+
+/* ================================================================
+   灵名输入
+   ================================================================ */
+
+.lc-start-name {
+  margin-bottom: 24px;
+}
+
+.lc-start-input {
+  width: 100%; max-width: 240px;
+  padding: 10px 16px; text-align: center;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px; outline: none;
+  color: #e2e8f0; font-size: 15px; font-weight: 500;
+  letter-spacing: 2px; transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.lc-start-input::placeholder {
+  color: #64748b; font-size: 13px; font-weight: 400; letter-spacing: 1px;
+}
+
+.lc-start-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+}
+
+/* ================================================================
+   NPC 预览卡
+   ================================================================ */
+
+.lc-start-npcs {
+  display: flex; justify-content: center; gap: 20px; margin-bottom: 28px;
+}
+
+.lc-start-npc { width: 72px; text-align: center; }
+
+.lc-start-npc-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* 有立绘时 */
+.lc-start-npc-avatar img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center top;
+}
+
+.lc-start-npc-name {
+  font-size: 12px; font-weight: 500; color: #e2e8f0;
+}
+
+/* ================================================================
+   按钮组
+   ================================================================ */
+
+.lc-start-actions {
+  display: flex; flex-direction: column; gap: 10px; max-width: 280px; margin: 0 auto;
+}
+
+.lc-start-btn-primary {
+  width: 100%; padding: 13px 0; border: none; border-radius: 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff; font-size: 15px; font-weight: 600;
+  letter-spacing: 3px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.lc-start-btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.2);
+}
+
+.lc-start-btn-secondary {
+  width: 100%; padding: 12px 0; border-radius: 24px;
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #94a3b8; font-size: 14px; font-weight: 500;
+  letter-spacing: 2px; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lc-start-btn-secondary:active {
+  background: rgba(16, 185, 129, 0.08);
+  color: #e2e8f0;
+}
+
+/* ================================================================
+   音乐控制（底部）
+   ================================================================ */
+
+.lc-start-music {
+  margin-top: 16px; background: none; border: none;
+  font-size: 12px; color: #64748b; cursor: pointer;
+  transition: color 0.2s;
+}
+
+.lc-start-music:hover { color: #94a3b8; }
