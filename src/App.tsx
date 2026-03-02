@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore, ENDINGS, ENDING_TYPE_MAP } from '@/lib/store'
 import { useBgm } from '@/lib/bgm'
+import { trackGameStart, trackGameContinue, trackPlayerCreate } from '@/lib/analytics'
 import AppShell from '@/components/game/app-shell'
 import '@/styles/globals.css'
 import '@/styles/opening.css'
@@ -22,8 +23,21 @@ const NPC_PREVIEW = [
   { id: 'chili', name: '赤璃', color: '#ef4444', portrait: '/characters/chili.jpg' },
 ] as const
 
+// ── 初醒叙述文本 ──────────
+
+const AWAKEN_LINES: Array<{ text: string; accent?: boolean; warn?: boolean }> = [
+  { text: '……光。' },
+  { text: '微弱的光，从头顶裂缝洒落。' },
+  { text: '你感到了"重量"——一种从未有过的重量。' },
+  { text: '你低头。看到了手指。十根手指。' },
+  { text: '千年修行，一朝化形。', accent: true },
+  { text: '但这个世界，对灵草成精者从不仁慈。', warn: true },
+]
+
+type OpeningPhase = 'seed' | 'awaken' | 'create'
+
 // ============================================================
-// StartScreen — 仙侠暗色主题
+// StartScreen — 三幕开场：凝灵 → 初醒 → 灵名
 // ============================================================
 
 function StartScreen() {
@@ -33,134 +47,240 @@ function StartScreen() {
   const hasSave = useGameStore((s) => s.hasSave)
   const { toggle, isPlaying } = useBgm()
 
+  const [phase, setPhase] = useState<OpeningPhase>('seed')
   const [gender, setGender] = useState<'male' | 'female'>('male')
   const [name, setName] = useState('灵芝')
 
   const handleStart = () => {
+    trackGameStart()
+    trackPlayerCreate(gender, name || '灵芝')
     setPlayerInfo(gender, name || '灵芝')
     initGame()
   }
 
+  const handleContinue = () => {
+    trackGameContinue()
+    loadGame()
+  }
+
   return (
     <div className="lc-start">
-      {/* 灵气粒子 */}
-      <div className="lc-start-particles">
-        {Array.from({ length: 12 }, (_, i) => (
-          <div
-            key={i}
-            className="lc-start-spark"
-            style={{
-              left: `${10 + Math.random() * 80}%`,
-              bottom: `${Math.random() * 40}%`,
-              width: `${6 + Math.random() * 8}px`,
-              height: `${6 + Math.random() * 8}px`,
-              animationDuration: `${3 + Math.random() * 4}s`,
-              animationDelay: `${Math.random() * 3}s`,
-            }}
-          />
-        ))}
-      </div>
+      <AnimatePresence mode="wait">
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="lc-start-card"
-      >
-        {/* 标题 */}
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: 'spring' }}
-          className="lc-start-icon"
-        >
-          🌿
-        </motion.div>
-        <h1 className="lc-start-title">灵草修仙录</h1>
-        <p className="lc-start-subtitle">Spirit Herb Chronicle</p>
-        <p className="lc-start-desc">
-          天元历三千七百年，一株千年九叶灵芝化形成人...
-        </p>
+        {/* ── Phase 1: 凝灵 —— 九叶灵芝化形前的最后一刻 ── */}
+        {phase === 'seed' && (
+          <motion.div key="seed" className="lc-seed"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
 
-        {/* 性别选择 */}
-        <div className="lc-start-gender">
-          {(['male', 'female'] as const).map((g) => (
-            <button
-              key={g}
-              className={`lc-start-gender-btn ${gender === g ? 'active' : ''}`}
-              onClick={() => setGender(g)}
-            >
-              {g === 'male' ? '男' : '女'}
+            <div className="lc-seed-aurora" />
+
+            <div className="lc-seed-particles">
+              {Array.from({ length: 15 }, (_, i) => (
+                <div key={i} className="lc-seed-spark" style={{
+                  left: `${5 + Math.random() * 90}%`,
+                  bottom: `${Math.random() * 50}%`,
+                  width: `${4 + Math.random() * 6}px`,
+                  height: `${4 + Math.random() * 6}px`,
+                  animationDuration: `${4 + Math.random() * 5}s`,
+                  animationDelay: `${Math.random() * 4}s`,
+                }} />
+              ))}
+            </div>
+
+            {/* 核心：发光灵种 + 九叶环绕 */}
+            <div className="lc-seed-center">
+              <div className="lc-seed-core" />
+              <div className="lc-seed-ring">
+                {Array.from({ length: 9 }, (_, i) => (
+                  <div key={i} className="lc-seed-dot" style={{
+                    transform: `rotate(${i * 40}deg) translateY(-52px)`,
+                    animationDelay: `${i * 0.2}s`,
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            <motion.div className="lc-seed-text"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 1.2 }}>
+              <p>天元历三千七百年</p>
+              <p className="lc-seed-text-dim">一株千年九叶灵芝</p>
+              <p className="lc-seed-text-dim">于山野灵气中凝聚千年</p>
+              <p className="lc-seed-text-glow">终于——化形。</p>
+            </motion.div>
+
+            <motion.h1 className="lc-seed-title"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.8 }}>
+              灵草修仙录
+            </motion.h1>
+
+            <motion.button className="lc-seed-cta"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2, duration: 0.6 }}
+              onClick={() => setPhase('awaken')}>
+              睁开双眼
+            </motion.button>
+
+            {hasSave() && (
+              <motion.button className="lc-seed-save"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.6 }}
+                transition={{ delay: 2.5 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleContinue}>
+                继续游戏
+              </motion.button>
+            )}
+
+            <button className={`lc-music-bar ${isPlaying ? '' : 'paused'}`}
+              onClick={(e) => toggle(e)}>
+              <span /><span /><span /><span />
             </button>
-          ))}
-        </div>
+          </motion.div>
+        )}
 
-        {/* 灵名输入 */}
-        <div className="lc-start-name">
-          <input
-            className="lc-start-input"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="你的灵名..."
-            maxLength={8}
-          />
-        </div>
+        {/* ── Phase 2: 初醒 —— 第一次以人类视角看世界 ── */}
+        {phase === 'awaken' && (
+          <motion.div key="awaken" className="lc-awaken"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} transition={{ duration: 0.6 }}>
 
-        {/* NPC 预览 */}
-        <div className="lc-start-npcs">
-          {NPC_PREVIEW.map((npc, i) => (
-            <motion.div
-              key={npc.id}
+            <div className="lc-awaken-bg" />
+            <div className="lc-awaken-vignette" />
+
+            <motion.div className="lc-awaken-lines"
+              initial="hidden" animate="visible"
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 1.8 } } }}>
+              {AWAKEN_LINES.map((line, i) => (
+                <motion.p key={i}
+                  className={`lc-awaken-line${line.accent ? ' accent' : ''}${line.warn ? ' warn' : ''}`}
+                  variants={{
+                    hidden: { opacity: 0, y: 8 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
+                  }}>
+                  {line.text}
+                </motion.p>
+              ))}
+            </motion.div>
+
+            <motion.button className="lc-awaken-skip"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.45 }}
+              transition={{ delay: 1 }}
+              onClick={() => setPhase('create')}>
+              跳过 ›
+            </motion.button>
+
+            <motion.button className="lc-awaken-next"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 12, duration: 0.6 }}
+              onClick={() => setPhase('create')}>
+              继续 →
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* ── Phase 3: 灵名 —— 身份选择 ── */}
+        {phase === 'create' && (
+          <motion.div key="create" className="lc-create"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+
+            <div className="lc-create-particles">
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={i} className="lc-create-spark" style={{
+                  left: `${10 + Math.random() * 80}%`,
+                  bottom: `${Math.random() * 40}%`,
+                  width: `${5 + Math.random() * 7}px`,
+                  height: `${5 + Math.random() * 7}px`,
+                  animationDuration: `${3 + Math.random() * 4}s`,
+                  animationDelay: `${Math.random() * 3}s`,
+                }} />
+              ))}
+            </div>
+
+            <motion.button className="lc-create-back"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => setPhase('seed')}>
+              ‹ 返回
+            </motion.button>
+
+            <motion.div className="lc-create-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + i * 0.12 }}
-              className="lc-start-npc"
-            >
-              <div
-                className="lc-start-npc-avatar"
-                style={{ border: `2px solid ${npc.color}`, background: `${npc.color}18` }}
-              >
-                <img
-                  src={npc.portrait}
-                  alt={npc.name}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement!.textContent = npc.name[0]
-                  }}
-                />
+              transition={{ duration: 0.6 }}>
+
+              <div className="lc-create-label">选择你的身份</div>
+
+              <div className="lc-create-gender">
+                {(['male', 'female'] as const).map((g) => (
+                  <button key={g}
+                    className={`lc-create-gender-btn ${gender === g ? 'active' : ''}`}
+                    onClick={() => setGender(g)}>
+                    {g === 'male' ? '男' : '女'}
+                  </button>
+                ))}
               </div>
-              <div className="lc-start-npc-name">{npc.name}</div>
+
+              <div className="lc-create-name">
+                <input className="lc-create-input" type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="你的灵名..."
+                  maxLength={8} />
+              </div>
+
+              <div className="lc-create-npcs">
+                {NPC_PREVIEW.map((npc, i) => (
+                  <motion.div key={npc.id} className="lc-create-npc"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.12 }}>
+                    <div className="lc-create-npc-avatar"
+                      style={{ border: `2px solid ${npc.color}`, background: `${npc.color}18` }}>
+                      <img src={npc.portrait} alt={npc.name}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.parentElement!.textContent = npc.name[0]
+                        }} />
+                    </div>
+                    <div className="lc-create-npc-name">{npc.name}</div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="lc-create-actions">
+                <motion.button whileTap={{ scale: 0.97 }}
+                  className="lc-create-start"
+                  onClick={handleStart}>
+                  踏入修仙界
+                </motion.button>
+                {hasSave() && (
+                  <motion.button whileTap={{ scale: 0.97 }}
+                    className="lc-create-continue"
+                    onClick={handleContinue}>
+                    继续游戏
+                  </motion.button>
+                )}
+              </div>
             </motion.div>
-          ))}
-        </div>
 
-        {/* 按钮组 */}
-        <div className="lc-start-actions">
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            className="lc-start-btn-primary"
-            onClick={handleStart}
-          >
-            踏入修仙界
-          </motion.button>
+            <button className={`lc-music-bar ${isPlaying ? '' : 'paused'}`}
+              onClick={(e) => toggle(e)}>
+              <span /><span /><span /><span />
+            </button>
+          </motion.div>
+        )}
 
-          {hasSave() && (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              className="lc-start-btn-secondary"
-              onClick={() => loadGame()}
-            >
-              继续游戏
-            </motion.button>
-          )}
-        </div>
-
-        {/* 音乐 */}
-        <button className="lc-start-music" onClick={(e) => toggle(e)}>
-          {isPlaying ? '🔊 音乐开' : '🔇 音乐关'}
-        </button>
-      </motion.div>
+      </AnimatePresence>
     </div>
   )
 }

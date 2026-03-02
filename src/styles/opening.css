@@ -1,180 +1,486 @@
 /**
- * [INPUT]: 依赖 globals.css CSS 变量
- * [OUTPUT]: 开场页全部样式——仙侠暗色 StartScreen（性别选择+灵名输入+NPC 预览+粒子）
- * [POS]: styles 的开场专用样式，暗色仙侠水墨风（不抄 huashao 三幕开场）
+ * [INPUT]: globals.css CSS 变量
+ * [OUTPUT]: 三幕开场样式 — 凝灵(seed) → 初醒(awaken) → 灵名(create)
+ * [POS]: styles/opening.css — 仙侠灵草化形开场序列
  * [PROTOCOL]: 变更时更新此头部，然后检查 CLAUDE.md
  */
 
 /* ================================================================
-   StartScreen 全屏容器
+   Phase 0: 共享容器
    ================================================================ */
 
 .lc-start {
   position: fixed; inset: 0; overflow: hidden;
+  background: #030712;
+}
+
+/* ================================================================
+   Phase 1 — 凝灵 (Spirit Condensing)
+   九叶灵芝化形前的最后一刻：黑暗虚空 + 翡翠核心 + 九叶环绕
+   ================================================================ */
+
+.lc-seed {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #030712;
+  overflow: hidden;
+}
+
+/* 灵气极光雾 */
+.lc-seed-aurora {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(16, 185, 129, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 40%, rgba(16, 185, 129, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 30%, rgba(6, 78, 59, 0.05) 0%, transparent 45%);
+  animation: lcAuroraPulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes lcAuroraPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 灵气粒子 */
+.lc-seed-particles {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+}
+
+.lc-seed-spark {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 70%);
+  animation: lcSparkRise linear infinite;
+}
+
+@keyframes lcSparkRise {
+  0%   { opacity: 0; transform: translateY(0) scale(0.3); }
+  20%  { opacity: 0.5; }
+  80%  { opacity: 0.4; }
+  100% { opacity: 0; transform: translateY(-120px) scale(0.6); }
+}
+
+/* 核心组合 */
+.lc-seed-center {
+  position: relative;
+  width: 130px; height: 130px;
   display: flex; align-items: center; justify-content: center;
+  margin-bottom: 36px;
+  z-index: 1;
+}
+
+/* 发光核心 */
+.lc-seed-core {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #34d399 0%, rgba(16, 185, 129, 0.4) 50%, transparent 70%);
+  box-shadow:
+    0 0 30px rgba(16, 185, 129, 0.5),
+    0 0 60px rgba(16, 185, 129, 0.25),
+    0 0 100px rgba(16, 185, 129, 0.1);
+  animation: lcCorePulse 3s ease-in-out infinite;
+}
+
+@keyframes lcCorePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), 0 0 60px rgba(16, 185, 129, 0.25), 0 0 100px rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 50px rgba(16, 185, 129, 0.6), 0 0 90px rgba(16, 185, 129, 0.35), 0 0 140px rgba(16, 185, 129, 0.15);
+  }
+}
+
+/* 九叶轨道环 */
+.lc-seed-ring {
+  position: absolute; inset: 0;
+  animation: lcOrbit 18s linear infinite;
+}
+
+@keyframes lcOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 叶·灵光点 */
+.lc-seed-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 5px; height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7), 0 0 20px rgba(16, 185, 129, 0.3);
+  animation: lcDotPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes lcDotPulse {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 6px rgba(16, 185, 129, 0.5); }
+  50% { opacity: 1; box-shadow: 0 0 14px rgba(16, 185, 129, 0.8), 0 0 24px rgba(16, 185, 129, 0.3); }
+}
+
+/* 叙述文字 */
+.lc-seed-text {
+  position: relative; z-index: 1;
+  text-align: center;
+  line-height: 2.2;
+  margin-bottom: 24px;
+}
+
+.lc-seed-text p {
+  font-size: 14px;
+  color: rgba(226, 232, 240, 0.65);
+  letter-spacing: 2px;
+}
+
+.lc-seed-text-dim {
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.35) !important;
+}
+
+.lc-seed-text-glow {
+  color: #10b981 !important;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+  font-size: 15px !important;
+  margin-top: 2px;
+}
+
+/* 标题 */
+.lc-seed-title {
+  position: relative; z-index: 1;
+  font-size: 28px; font-weight: 700;
+  letter-spacing: 6px;
+  color: #e2e8f0;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  margin-bottom: 32px;
+}
+
+/* 主 CTA */
+.lc-seed-cta {
+  position: relative; z-index: 1;
+  padding: 12px 40px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 24px;
+  background: rgba(16, 185, 129, 0.06);
+  color: #10b981;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.lc-seed-cta::before {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.12), transparent);
+  animation: lcShimmer 3s infinite;
+}
+
+@keyframes lcShimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.lc-seed-cta:active {
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+}
+
+/* Phase 1 继续游戏 */
+.lc-seed-save {
+  position: absolute;
+  bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%);
+  z-index: 2;
+  padding: 8px 24px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.04);
+  color: #94a3b8; font-size: 13px;
+  letter-spacing: 2px; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lc-seed-save:active {
+  background: rgba(16, 185, 129, 0.08);
+  color: #e2e8f0;
+}
+
+/* ================================================================
+   Phase 2 — 初醒 (First Awakening)
+   第一次以人的视角看世界——从模糊到清晰
+   ================================================================ */
+
+.lc-awaken {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: #030712;
+}
+
+/* 山洞背景（模糊渐清） */
+.lc-awaken-bg {
+  position: absolute; inset: -20px;
+  background: url('/scenes/cave.jpg') center / cover no-repeat;
+  animation: lcBlurClear 4s ease-out forwards;
+}
+
+@keyframes lcBlurClear {
+  0%   { filter: blur(20px) brightness(0.15); }
+  100% { filter: blur(3px) brightness(0.3); }
+}
+
+/* 暗角遮罩 */
+.lc-awaken-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 20%, rgba(3, 7, 18, 0.7) 70%, rgba(3, 7, 18, 0.9) 100%);
+  pointer-events: none;
+}
+
+/* 灵脉心跳光晕 */
+.lc-awaken::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 280px; height: 280px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+  animation: lcHeartbeat 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes lcHeartbeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+}
+
+/* 第一人称叙述 */
+.lc-awaken-lines {
+  position: relative; z-index: 2;
+  text-align: center;
+  max-width: 320px;
+  padding: 0 24px;
+}
+
+.lc-awaken-line {
+  font-size: 14px;
+  line-height: 2.4;
+  color: rgba(226, 232, 240, 0.75);
+  letter-spacing: 1.5px;
+}
+
+.lc-awaken-line.accent {
+  color: rgba(16, 185, 129, 0.85);
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.lc-awaken-line.warn {
+  color: rgba(239, 68, 68, 0.65);
+  font-weight: 500;
+}
+
+/* 跳过按钮 */
+.lc-awaken-skip {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: 16px; z-index: 3;
+  background: none; border: none;
+  color: rgba(226, 232, 240, 0.4);
+  font-size: 13px; letter-spacing: 1px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.lc-awaken-skip:active { color: rgba(226, 232, 240, 0.7); }
+
+/* 继续按钮（文字结束后出现） */
+.lc-awaken-next {
+  position: absolute;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%);
+  z-index: 3;
+  padding: 10px 36px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.06);
+  color: #10b981;
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.lc-awaken-next:active {
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+/* ================================================================
+   Phase 3 — 灵名 (Spirit Name)
+   身份选择 + 角色创建
+   ================================================================ */
+
+.lc-create {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
   background: linear-gradient(170deg, #0f172a 0%, #0a1628 40%, #0f172a 100%);
 }
 
-/* 背景灵气粒子层 */
-.lc-start-particles {
-  position: absolute; inset: 0; pointer-events: none; z-index: 0;
-}
-.lc-start-spark {
-  position: absolute; border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
-  animation: lcSparkFloat linear infinite;
-}
-@keyframes lcSparkFloat {
-  0%   { opacity: 0; transform: translateY(0) scale(0.3); }
-  20%  { opacity: 0.6; }
-  80%  { opacity: 0.6; }
-  100% { opacity: 0; transform: translateY(-100px) scale(0.8); }
-}
-
-/* 雾气背景 */
-.lc-start::before {
+/* 雾气叠层 */
+.lc-create::before {
   content: ''; position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse at 30% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 30%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
-  pointer-events: none; z-index: 0;
+    radial-gradient(ellipse at 30% 70%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-/* ================================================================
-   主内容卡片
-   ================================================================ */
+/* 灵气粒子 */
+.lc-create-particles {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+}
 
-.lc-start-card {
+.lc-create-spark {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+  animation: lcSparkRise linear infinite;
+}
+
+/* 返回按钮 */
+.lc-create-back {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: 16px; z-index: 2;
+  background: none; border: none;
+  color: rgba(226, 232, 240, 0.35);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.lc-create-back:active { color: rgba(226, 232, 240, 0.7); }
+
+/* 内容卡片 */
+.lc-create-card {
   position: relative; z-index: 1;
   width: 360px; max-width: calc(100vw - 48px);
-  text-align: center; padding: 32px 24px;
+  text-align: center; padding: 28px 24px;
 }
 
-/* 标题区 */
-.lc-start-icon {
-  font-size: 56px; margin-bottom: 12px;
-  filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.3));
-}
-
-.lc-start-title {
-  font-size: 26px; font-weight: 700; letter-spacing: 4px;
-  color: #e2e8f0;
-  text-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
-  margin-bottom: 6px;
-}
-
-.lc-start-subtitle {
-  font-size: 12px; letter-spacing: 6px;
-  color: rgba(16, 185, 129, 0.7);
-  margin-bottom: 6px;
-}
-
-.lc-start-desc {
-  font-size: 12px; line-height: 1.8; letter-spacing: 0.5px;
-  color: #94a3b8;
+/* 标题 */
+.lc-create-label {
+  font-size: 15px; font-weight: 500;
+  color: rgba(226, 232, 240, 0.7);
+  letter-spacing: 4px;
   margin-bottom: 28px;
 }
 
-/* ================================================================
-   性别选择
-   ================================================================ */
-
-.lc-start-gender {
+/* 性别选择 */
+.lc-create-gender {
   display: flex; justify-content: center; gap: 12px; margin-bottom: 16px;
 }
 
-.lc-start-gender-btn {
+.lc-create-gender-btn {
   padding: 8px 28px; border-radius: 24px;
   font-size: 14px; font-weight: 500; cursor: pointer;
   transition: all 0.25s; border: 1px solid rgba(16, 185, 129, 0.25);
   background: transparent; color: #94a3b8;
 }
 
-.lc-start-gender-btn.active {
+.lc-create-gender-btn.active {
   background: linear-gradient(135deg, #10b981, #059669);
   border-color: transparent; color: #fff;
   box-shadow: 0 2px 12px rgba(16, 185, 129, 0.3);
 }
 
-.lc-start-gender-btn:active { transform: scale(0.96); }
+.lc-create-gender-btn:active { transform: scale(0.96); }
 
-/* ================================================================
-   灵名输入
-   ================================================================ */
+/* 灵名输入 */
+.lc-create-name { margin-bottom: 24px; }
 
-.lc-start-name {
-  margin-bottom: 24px;
-}
-
-.lc-start-input {
+.lc-create-input {
   width: 100%; max-width: 240px;
   padding: 10px 16px; text-align: center;
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: 12px; outline: none;
   color: #e2e8f0; font-size: 15px; font-weight: 500;
-  letter-spacing: 2px; transition: border-color 0.3s, box-shadow 0.3s;
+  letter-spacing: 2px;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.lc-start-input::placeholder {
+.lc-create-input::placeholder {
   color: #64748b; font-size: 13px; font-weight: 400; letter-spacing: 1px;
 }
 
-.lc-start-input:focus {
+.lc-create-input:focus {
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
 }
 
-/* ================================================================
-   NPC 预览卡
-   ================================================================ */
-
-.lc-start-npcs {
+/* NPC 预览 */
+.lc-create-npcs {
   display: flex; justify-content: center; gap: 20px; margin-bottom: 28px;
 }
 
-.lc-start-npc { width: 72px; text-align: center; }
+.lc-create-npc { width: 72px; text-align: center; }
 
-.lc-start-npc-avatar {
+.lc-create-npc-avatar {
   width: 52px; height: 52px; border-radius: 50%;
-  margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 700;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
 
-/* 有立绘时 */
-.lc-start-npc-avatar img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center top;
+.lc-create-npc-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
 }
 
-.lc-start-npc-name {
+.lc-create-npc-name {
   font-size: 12px; font-weight: 500; color: #e2e8f0;
 }
 
-/* ================================================================
-   按钮组
-   ================================================================ */
-
-.lc-start-actions {
-  display: flex; flex-direction: column; gap: 10px; max-width: 280px; margin: 0 auto;
+/* 操作按钮 */
+.lc-create-actions {
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: 280px; margin: 0 auto;
 }
 
-.lc-start-btn-primary {
+.lc-create-start {
   width: 100%; padding: 13px 0; border: none; border-radius: 24px;
   background: linear-gradient(135deg, #10b981, #059669);
   color: #fff; font-size: 15px; font-weight: 600;
   letter-spacing: 3px; cursor: pointer;
   box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
   transition: transform 0.15s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
 }
 
-.lc-start-btn-primary:active {
+.lc-create-start::before {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: lcShimmer 3s infinite;
+}
+
+.lc-create-start:active {
   transform: scale(0.97);
   box-shadow: 0 2px 12px rgba(16, 185, 129, 0.2);
 }
 
-.lc-start-btn-secondary {
+.lc-create-continue {
   width: 100%; padding: 12px 0; border-radius: 24px;
   background: rgba(16, 185, 129, 0.04);
   border: 1px solid rgba(16, 185, 129, 0.2);
@@ -183,19 +489,45 @@
   transition: all 0.2s;
 }
 
-.lc-start-btn-secondary:active {
+.lc-create-continue:active {
   background: rgba(16, 185, 129, 0.08);
   color: #e2e8f0;
 }
 
 /* ================================================================
-   音乐控制（底部）
+   音乐条（跨阶段共享）
    ================================================================ */
 
-.lc-start-music {
-  margin-top: 16px; background: none; border: none;
-  font-size: 12px; color: #64748b; cursor: pointer;
-  transition: color 0.2s;
+.lc-music-bar {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%);
+  z-index: 5;
+  background: none; border: none;
+  display: flex; gap: 3px; align-items: flex-end;
+  height: 22px; cursor: pointer;
+  padding: 4px 16px;
 }
 
-.lc-start-music:hover { color: #94a3b8; }
+.lc-music-bar span {
+  display: block; width: 3px;
+  background: rgba(16, 185, 129, 0.5);
+  border-radius: 1.5px;
+  animation: lcMusicPulse 0.8s ease-in-out infinite alternate;
+}
+
+.lc-music-bar span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.lc-music-bar span:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+.lc-music-bar span:nth-child(3) { height: 10px; animation-delay: 0.3s; }
+.lc-music-bar span:nth-child(4) { height: 6px; animation-delay: 0.45s; }
+
+@keyframes lcMusicPulse {
+  0% { height: 4px; opacity: 0.3; }
+  100% { height: 16px; opacity: 0.7; }
+}
+
+.lc-music-bar.paused span {
+  animation: none;
+  height: 4px !important;
+  opacity: 0.2;
+}

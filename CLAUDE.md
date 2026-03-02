@@ -14,7 +14,7 @@ React 19 + Zustand 5 + Immer + Vite 7 + Tailwind CSS v4 + Framer Motion + Cloudf
 ├── src/
 │   ├── main.tsx                 - ☆ React 入口
 │   ├── vite-env.d.ts            - Vite 类型声明
-│   ├── App.tsx                  - 根组件: StartScreen(仙侠暗色+灵气粒子) + AppShell + EndingModal(双按钮)
+│   ├── App.tsx                  - 根组件: 三幕开场(凝灵→初醒→灵名) + AppShell + EndingModal(双按钮)
 │   ├── lib/
 │   │   ├── script.md            - ★ 剧本直通：五模块原文（零转换注入 prompt）
 │   │   ├── data.ts              - ★ UI 薄层：类型(含富消息扩展) + 3角色 + 5场景 + 3道具 + 4章节 + 7强制事件 + 5结局
@@ -26,7 +26,7 @@ React 19 + Zustand 5 + Immer + Vite 7 + Tailwind CSS v4 + Framer Motion + Cloudf
 │   │   └── hooks.ts             - ☆ useMediaQuery / useIsMobile
 │   ├── styles/
 │   │   ├── globals.css          - 全局基础样式（lc- 前缀，暗色仙侠主题）
-│   │   ├── opening.css          - 开场样式：StartScreen 仙侠暗色 + 灵气粒子
+│   │   ├── opening.css          - 三幕开场样式：凝灵(灵种+九叶环绕) → 初醒(模糊渐清+叙事) → 灵名(角色创建)
 │   │   └── rich-cards.css       - 富UI组件：场景卡 + 时辰卡 + NPC气泡 + DashboardDrawer + RecordSheet + 角色档案 + SVG关系图 + 朔月警告 + Toast
 │   └── components/game/
 │       ├── app-shell.tsx        - 桌面居中壳 + Header(📓+🎵+☰+📜) + 三向手势 + Tab路由 + TabBar(5键) + DashboardDrawer + RecordSheet + Toast
@@ -57,7 +57,9 @@ React 19 + Zustand 5 + Immer + Vite 7 + Tailwind CSS v4 + Framer Motion + Cloudf
 
 | 组件 | 位置 | 触发 | 视觉风格 |
 |------|------|------|----------|
-| StartScreen | App.tsx | 未开始 | 暗色仙侠+灵气粒子+NPC立绘预览+翡翠绿按钮 |
+| StartScreen Phase1 凝灵 | App.tsx | 未开始 | 黑暗虚空+翡翠核心脉动+九叶灵光环绕(18s公转)+灵气粒子升腾+叙事文字渐显+"睁开双眼"CTA |
+| StartScreen Phase2 初醒 | App.tsx | Phase1→ | 山洞背景blur(20px→3px)渐清+暗角+灵脉心跳光晕+6行第一人称叙事(stagger 1.8s)+跳过/继续 |
+| StartScreen Phase3 灵名 | App.tsx | Phase2→ | 灵气粒子+性别选择+灵名输入+3NPC预览+翡翠渐变CTA+"返回"导航 |
 | DashboardDrawer | dashboard-drawer | Header📓+右滑手势 | 暗色毛玻璃：扉页+朔月倒计时+角色轮播+场景缩略图+修行目标+道具+播放器。Reorder拖拽 |
 | RecordSheet | app-shell | Header📜+左滑手势 | 右侧滑入事件记录：时间线倒序+翡翠圆点 |
 | SceneTransitionCard | tab-dialogue | selectScene | 场景背景+Ken Burns(8s)+渐变遮罩 |
