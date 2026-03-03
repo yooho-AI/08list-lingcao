@@ -51,11 +51,14 @@ function StartScreen() {
   const [gender, setGender] = useState<'male' | 'female'>('male')
   const [name, setName] = useState('灵芝')
 
+  const sendMessage = useGameStore((s) => s.sendMessage)
+
   const handleStart = () => {
     trackGameStart()
     trackPlayerCreate(gender, name || '灵芝')
     setPlayerInfo(gender, name || '灵芝')
     initGame()
+    setTimeout(() => sendMessage('开始游戏'), 500)
   }
 
   const handleContinue = () => {

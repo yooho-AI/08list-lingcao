@@ -23,8 +23,8 @@ const P = 'lc'
 // ── Tab map ─────────────────────────────────────────────
 
 const TABS = [
-  { key: 'dialogue' as const, icon: ChatCircleDots, label: '对话' },
   { key: 'scene' as const, icon: MapTrifold, label: '场景' },
+  { key: 'dialogue' as const, icon: ChatCircleDots, label: '对话' },
   { key: 'character' as const, icon: Users, label: '人物' },
 ]
 

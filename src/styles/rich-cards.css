@@ -542,7 +542,7 @@
   background: var(--bg-card);
   border: 1px solid rgba(16, 185, 129, 0.12);
   border-radius: 14px; padding: 24px 20px;
-  margin-bottom: 12px; overflow: hidden;
+  margin-bottom: 12px; overflow: hidden; flex-shrink: 0;
 }
 .lc-letter::before {
   content: ''; position: absolute;
